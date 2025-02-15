@@ -18,18 +18,8 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
     private var recordingURL: URL?
     
     private func getTemporaryRecordingURL() -> URL? {
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileURL = tempDir.appendingPathComponent("tempRecording.mov")
-
-        do {
-            try Data().write(to: fileURL)  // Test if we can write to this location
-            print("✅ Successfully wrote test file to:", fileURL.path)
-        } catch {
-            print("❌ Cannot write to temp directory: \(error.localizedDescription)")
-            return nil
-        }
-
-        return fileURL
+        let downloadsDir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        return downloadsDir.appendingPathComponent("screenRecording.mov")
     }
     
     private func moveRecording(to saveURL: URL) {
@@ -64,6 +54,8 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
         }
 
         let output = AVCaptureMovieFileOutput()
+        output.movieFragmentInterval = .invalid  // Disable fragmented recording
+        
         if session.canAddOutput(output) {
             session.addOutput(output)
             self.output = output
@@ -71,7 +63,7 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
             print("❌ Error: Could not add movie file output")
             return
         }
-
+        session.sessionPreset = .high
         session.commitConfiguration()
         session.startRunning()
 
@@ -88,8 +80,6 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
             self.isRecording = true
         }
     }
-
-
 
     override func stopRecording() {
         output?.stopRecording()

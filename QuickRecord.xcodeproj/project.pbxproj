@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		FFC8A1812D5FCA0C00F21E9E /* QuickRecord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFC8A1AE2D609E1E00F21E9E /* QuickRecord.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QuickRecord.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -45,6 +46,7 @@
 		FFC8A1782D5FCA0C00F21E9E = {
 			isa = PBXGroup;
 			children = (
+				FFC8A1AE2D609E1E00F21E9E /* QuickRecord.entitlements */,
 				FFC8A1832D5FCA0C00F21E9E /* QuickRecord */,
 				FFC8A1822D5FCA0C00F21E9E /* Products */,
 			);
