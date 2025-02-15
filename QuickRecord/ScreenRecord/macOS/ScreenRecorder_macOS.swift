@@ -5,6 +5,11 @@ import AVFoundation
 
 class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate {
     
+    
+    private var session: AVCaptureSession?
+    private var output: AVCaptureMovieFileOutput?
+    private var recordingURL: URL?
+    
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: (any Error)?) {
         if let error = error {
                     print("❌ Recording finished with error: \(error.localizedDescription)")
@@ -12,10 +17,6 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
                     print("✅ Recording successfully saved to: \(outputFileURL.path)")
                 }
     }
-    
-    private var session: AVCaptureSession?
-    private var output: AVCaptureMovieFileOutput?
-    private var recordingURL: URL?
     
     private func getTemporaryRecordingURL() -> URL? {
         let downloadsDir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
@@ -37,11 +38,18 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
        }
 
     override func startRecording() {
+        
+        // 🖥️ Show screen selection before recording
+       guard let selectedDisplayID = showScreenSelectionPopup() else {
+           print("❌ No screen selected for recording.")
+           return
+       }
+        
         let session = AVCaptureSession()
         self.session = session
         session.sessionPreset = .high
 
-        guard let screenInput = AVCaptureScreenInput(displayID: CGMainDisplayID()) else {
+        guard let screenInput = AVCaptureScreenInput(displayID: selectedDisplayID) else {
             print("❌ Error: Could not get screen input")
             return
         }
@@ -84,18 +92,43 @@ class ScreenRecorder_macOS: ScreenRecorder, AVCaptureFileOutputRecordingDelegate
     override func stopRecording() {
         output?.stopRecording()
         session?.stopRunning()
+        self.isRecording = false
+    }
+    
+    private func showScreenSelectionPopup() -> CGDirectDisplayID? {
+            let screens = NSScreen.screens
+            guard !screens.isEmpty else {
+                print("❌ No screens detected.")
+                return nil
+            }
 
-        DispatchQueue.main.async {
-            self.isRecording = false
-            FilePicker.showSavePanel { saveURL in
-                if let url = saveURL {
-                    self.moveRecording(to: url)
-                } else {
-                    print("❌ User canceled file save")
+            let alert = NSAlert()
+            alert.messageText = "Select a Screen to Record"
+            alert.informativeText = "Choose which screen you want to capture."
+            alert.alertStyle = .informational
+
+            let popup = NSPopUpButton(frame: .zero, pullsDown: false)
+            var displayIDs: [CGDirectDisplayID] = []
+
+        for (_, screen) in screens.enumerated() {
+                if let screenID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID {
+                    let screenName = screen.localizedName
+                    popup.addItem(withTitle: screenName)
+                    displayIDs.append(screenID)
                 }
             }
+
+            alert.accessoryView = popup
+            alert.addButton(withTitle: "Start Recording")
+            alert.addButton(withTitle: "Cancel")
+
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn, let index = popup.indexOfSelectedItem as Int? {
+                return displayIDs[index]
+            }
+
+            return nil
         }
-    }
 }
 
 class RecordingDelegate: NSObject, AVCaptureFileOutputRecordingDelegate {

@@ -10,44 +10,66 @@ struct ContentView: View {
     }()
 
     var body: some View {
-        VStack {
-            Text("Screen Recorder")
-                .font(.largeTitle)
-                .padding()
+            VStack(spacing: 12) {
+                Text("Screen Recorder")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
 
-            Button(action: {
-                if recorder.isRecording {
-                    recorder.stopRecording()
-                } else {
-                    print("🖥️ NSApplication.shared:", NSApplication.shared as Any)
-                    recorder.startRecording();
-                }
-            }) {
-                Text(recorder.isRecording ? "Stop Recording" : "Start Recording")
+                Button(action: {
+                    if recorder.isRecording {
+                       recorder.stopRecording()
+                   } else {
+                       print("🖥️ NSApplication.shared:", NSApplication.shared as Any)
+                       recorder.startRecording();
+                   }
+                }) {
+                    HStack {
+                        Image(systemName: recorder.isRecording ? "stop.circle.fill" : "record.circle.fill")
+                            .font(.system(size: 22))
+                        Text(recorder.isRecording ? "Stop Recording" : "Start Recording")
+                            .font(.system(size: 16, weight: .medium))
+                    }
                     .padding()
+                    .frame(maxWidth: .infinity)
                     .background(recorder.isRecording ? Color.red : Color.green)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-
-            Button(action: {
-                if let videoURL = recorder.lastRecordedVideo {
-                    recorder.applyTimeLapse(to: videoURL, speedMultiplier: 2.0) { timelapseURL in
-                        if let url = timelapseURL {
-                            print("Timelapse saved at: \(url)")
-                        }
-                    }
-                } else {
-                    print("No recorded video found")
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
                 }
-            }) {
-                Text("Apply TimeLapse")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                .buttonStyle(PlainButtonStyle())
+
+                Divider()
+                    .background(Color.white.opacity(0.2))
+
+                Button(action: {
+                    NSApplication.shared.terminate(nil)
+                }) {
+                    Text("Quit")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .buttonStyle(PlainButtonStyle())
             }
+            .padding()
+            .frame(width: 200)
+            .background(BlurView())
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(color: Color.black.opacity(0.3), radius: 6, x: 0, y: 4)
+            .padding(.horizontal, 8)
         }
-        .padding()
+}
+
+
+// 💡 macOS-style blurred background
+struct BlurView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
     }
+    
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
